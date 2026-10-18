@@ -2,7 +2,7 @@
 
 A 3D globe of the last 30 days of earthquakes that you explore by asking questions in plain English, like "deep quakes under Fiji."
 
-**Live:** https://ai-globe-pi.vercel.app
+**Live:** https://ask-the-planet.vercel.app
 **Case study:** https://rbellamy.com/work/ask-the-planet/
 
 ## How it works
