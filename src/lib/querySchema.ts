@@ -14,6 +14,13 @@ export const regionSchema = z.object({
 
 export const querySchema = z
   .object({
+    // First, so the model decides whether the question is about earthquakes at all
+    // before it writes a filter (structured output is generated in field order).
+    unsupported: z
+      .string()
+      .max(240)
+      .nullable()
+      .describe("Decide this first. When the question isn't about earthquakes or can't be answered with this data: why, in one friendly sentence."),
     title: z.string().min(1).max(80).describe("A short heading for the answer, e.g. \"Biggest quakes near Japan\"."),
     minMagnitude: z.number().min(0).max(10).nullable(),
     maxMagnitude: z.number().min(0).max(10).nullable(),
@@ -23,11 +30,6 @@ export const querySchema = z
     region: regionSchema.nullable(),
     sort: z.enum(["magnitude", "smallest", "recent"]).describe("Biggest first, smallest first, or newest first."),
     limit: z.number().int().min(1).max(50).nullable().describe("Only for \"top N\" questions."),
-    unsupported: z
-      .string()
-      .max(240)
-      .nullable()
-      .describe("When the question can't be answered with this data: why, in one friendly sentence."),
   })
   .refine((q) => q.minMagnitude == null || q.maxMagnitude == null || q.minMagnitude <= q.maxMagnitude, {
     message: "minMagnitude must not be above maxMagnitude.",
