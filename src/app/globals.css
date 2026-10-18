@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme {
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+/* Anything you can click shows a pointer (Tailwind's reset gives buttons the arrow). */
+button:not(:disabled),
+summary,
+[role="button"] {
+  cursor: pointer;
+}
+
+/* Keyboard focus is always visible, in ink, on every control. */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+/* Reduced motion: still the CSS animations too (the 3D scene handles its own). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* A tap area bigger than the control looks: at least 44px tall (and wide, for short
+   words), without moving anything. For small text buttons and links. */
+@utility hit {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: min(0px, calc((100% - 44px) / 2)) min(-6px, calc((100% - 44px) / 2));
+  }
+}

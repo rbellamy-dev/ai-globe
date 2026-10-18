@@ -1,0 +1,50 @@
+/*
+ * The one place colors are defined. The page uses them through Tailwind
+ * utilities (text-place, bg-chip…) or var(--color-…); the 3D globe reads the
+ * same values at runtime (src/lib/palette.ts), so nothing keeps its own copy.
+ *
+ * Blue palette (mockup "mid 2"). One family for page and globe; the data
+ * steps a hue over (mint → teal → cobalt → indigo by depth); the question
+ * gets two muted accents: violet for place, rose for time.
+ *
+ * `static` emits every token, used in a class or not, so the globe can read them all.
+ */
+@theme static {
+  /* Page */
+  --color-bg: #f3f6fa;
+  --color-surface: #ffffff;
+  --color-ink: #10223a;
+  --color-muted: #4f6682;
+  --color-line: #d9e1ec;
+  --color-chip: #e6ecf4;
+  --color-chip-line: #c9d5e4;
+  --color-hover: #e6ecf4;
+  --color-code-key: #2462c2;
+
+  /* Globe */
+  --color-ocean: #5c8bd0;
+  --color-land: #f2f7fd;
+  --color-globe-grid: #4f7ec4;
+  /* Darkens the globe's edge and the halo around it, so it sits off the page. */
+  --color-globe-shadow: #163566;
+  /* Outline around each quake, so dark ones still read on the ocean. */
+  --color-marker-edge: #f2f7fd;
+
+  /* Depth of a quake, shallow to deep: dots, timeline bars, list and legend. */
+  --color-depth-1: #6fe0c8;
+  --color-depth-2: #16a3b4;
+  --color-depth-3: #2462c2;
+  --color-depth-4: #1a1554;
+  /* Each depth's edge on the page (list, legend, timeline): the two light ones darkened
+     to reach 3:1 against the page, a chip or white; the dark two need no help. */
+  --color-depth-1-edge: #409084;
+  --color-depth-2-edge: #1592a0;
+  --color-depth-3-edge: #2462c2;
+  --color-depth-4-edge: #1a1554;
+
+  /* The question: where, and when. */
+  --color-place: #6d4dc2;
+  --color-place-soft: #f1edfb;
+  --color-time: #b83e67;
+  --color-time-soft: #fbedf2;
+}
