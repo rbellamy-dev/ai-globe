@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { ASK_SYSTEM_PROMPT, MAX_QUESTION_LENGTH } from "@/lib/askPrompt";
-import { querySchema, type Query } from "@/lib/querySchema";
+import { askSchema, settleAnswer, type Query } from "@/lib/querySchema";
 import { createLimiter, visitorOf } from "@/lib/rateLimit";
 
 // Run on the Node.js runtime (Fluid Compute). Do NOT switch to edge.
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   try {
     const { output } = await generateText({
       model: openai("gpt-4o-mini"),
-      output: Output.object({ schema: querySchema }),
+      output: Output.object({ schema: askSchema }),
       system: ASK_SYSTEM_PROMPT,
       prompt: question,
       temperature: 0,
@@ -63,14 +63,15 @@ export async function POST(request: Request) {
     });
 
     // The schema's cross-field checks (min ≤ max) only run here, not in the model.
-    const parsed = querySchema.safeParse(output);
+    const parsed = askSchema.safeParse(output);
     if (!parsed.success) {
       console.warn("Model returned an invalid query:", parsed.error.issues);
       return Response.json({ error: "That question came back garbled. Try rephrasing it." }, { status: 502 });
     }
 
-    remember(key, parsed.data);
-    return Response.json({ query: parsed.data });
+    const query = settleAnswer(parsed.data);
+    remember(key, query);
+    return Response.json({ query });
   } catch (error) {
     if (request.signal.aborted) return new Response(null, { status: 499 });
     console.error("Failed to turn a question into a query:", error);

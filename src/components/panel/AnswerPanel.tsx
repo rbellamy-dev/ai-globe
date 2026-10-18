@@ -4,7 +4,6 @@ import { useState } from "react";
 import { headline, noResultsText } from "@/lib/filter";
 import { inFocus, useGlobe } from "@/store";
 import { Examples } from "../Examples";
-import { AskGuide } from "./AskGuide";
 import { FilterChips } from "./FilterChips";
 import { QueryCode } from "./QueryCode";
 import { ResultList } from "./ResultList";
@@ -45,6 +44,7 @@ export function AnswerPanel() {
   const source = useGlobe((s) => s.source);
   const asking = useGlobe((s) => s.asking);
   const notice = useGlobe((s) => s.notice);
+  const aside = useGlobe((s) => s.aside);
   const suggestion = useGlobe((s) => s.suggestion);
   const results = useGlobe((s) => s.results);
   const total = useGlobe((s) => s.total);
@@ -78,7 +78,7 @@ export function AnswerPanel() {
     (head.latest ? `, latest ${head.latest}` : "") +
     "." +
     (focusDay ? ` Showing ${focusDay.label}: ${listed.length} ${listed.length === 1 ? "quake" : "quakes"}.` : "");
-  const spoken = asking ? "Reading your question." : notice ? notice : answered ? sentence : "";
+  const spoken = asking ? "Reading your question." : notice ? notice : answered ? `${aside ? `${aside} ` : ""}${sentence}` : "";
 
   const actions = question && !asking && (
     <div className="flex shrink-0 items-center gap-4">
@@ -165,7 +165,10 @@ export function AnswerPanel() {
               </svg>
             </button>
           )}
-          <Examples label={suggestion ? "Or try" : "Try"} />
+          {/* Wider screens have the examples (and the guide) in the question bar already. */}
+          <div className="md:hidden">
+            <Examples label={suggestion ? "Or try" : "Try"} />
+          </div>
         </div>
       )}
 
@@ -173,6 +176,8 @@ export function AnswerPanel() {
           and the time take their colors, matching the ring on the globe and the timeline. */}
       {answered && (
         <div className={`flex flex-col gap-4 ${typed ? "border-t border-line pt-4" : ""}`}>
+          {/* Asked something the data can't answer, about a place: what it couldn't do, then the place's quakes. */}
+          {aside && <p className="text-base leading-relaxed text-muted">{aside}</p>}
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <p className="shrink-0 text-6xl leading-none font-semibold tracking-tight text-ink tabular-nums lg:text-[clamp(4.5rem,7vw,7rem)]">
               {head.count.toLocaleString("en-US")}
@@ -274,8 +279,6 @@ export function AnswerPanel() {
           <Examples />
         </div>
       )}
-
-      {ready && (!question || notice) && <AskGuide />}
     </aside>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MAX_QUESTION_LENGTH } from "@/lib/askPrompt";
 import { useGlobe } from "@/store";
 import { Examples } from "./Examples";
+import { AskGuidePanel, AskGuideToggle, GUIDE_ID } from "./panel/AskGuide";
 
 /** Example questions (ready-made queries, instant) and the question box (the AI, about a second). */
 export function QuestionBar() {
@@ -12,6 +13,12 @@ export function QuestionBar() {
   const ready = useGlobe((s) => s.status === "ready");
   const left = useGlobe((s) => s.questionsLeft);
   const [text, setText] = useState("");
+  const guide = useGlobe((s) => s.guideOpen);
+  const setGuide = useGlobe((s) => s.setGuideOpen);
+  // Whether the visitor opened the guide (it then takes focus) or a refusal did (it doesn't).
+  const [openedByHand, setOpenedByHand] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   // The allowance only matters once it's nearly gone; before that it's noise.
   const lowOnQuestions = left < 5;
 
@@ -21,16 +28,58 @@ export function QuestionBar() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canAsk) return;
+    // If this question gets refused, the guide opens without taking focus from the box.
+    setOpenedByHand(false);
     await askQuestion(question);
     // Clear the box once it's answered; a failed question stays put to edit and retry.
     if (!useGlobe.getState().notice) setText("");
   };
 
+  const toggleGuide = () => {
+    setOpenedByHand(!guide);
+    setGuide(!guide);
+  };
+  // A phrase from the guide goes into the box, ready to send or build on.
+  const pick = (phrase: string) => {
+    setText(phrase);
+    setOpenedByHand(false);
+    setGuide(false);
+    input.current?.focus();
+  };
+
+  // While the guide is open: Escape or a click anywhere else closes it.
+  useEffect(() => {
+    if (!guide) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setGuide(false);
+      // Back to where the guide was opened from, if focus was inside it.
+      if (document.getElementById(GUIDE_ID)?.contains(document.activeElement)) {
+        const toggles = root.current?.querySelectorAll<HTMLElement>(`[aria-controls='${GUIDE_ID}']`) ?? [];
+        // The phone and desktop toggles both exist; only one is on screen.
+        [...toggles].find((t) => t.offsetParent !== null)?.focus();
+      }
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setGuide(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer);
+    };
+  }, [guide, setGuide]);
+
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-1">
-      {/* Phones pin only the question box; their examples sit in the answer instead. */}
-      <div className="hidden md:block">
-        <Examples />
+    <div ref={root} className="mx-auto flex w-full max-w-3xl flex-col gap-1">
+      {guide && <AskGuidePanel onPick={pick} takeFocus={openedByHand} />}
+      {/* Phones pin only the question box (the guide's toggle sits inside it); their examples sit in the answer instead. */}
+      <div className="hidden items-center justify-between gap-x-4 md:flex">
+        <div className="min-w-0">
+          <Examples />
+        </div>
+        <AskGuideToggle open={guide} onToggle={toggleGuide} />
       </div>
       <form
         onSubmit={submit}
@@ -41,6 +90,7 @@ export function QuestionBar() {
         </label>
         <input
           id="question"
+          ref={input}
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={MAX_QUESTION_LENGTH}
@@ -55,6 +105,9 @@ export function QuestionBar() {
             {left === 0 ? "No questions left" : `${left} ${left === 1 ? "question" : "questions"} left`}
           </span>
         )}
+        <div className="md:hidden">
+          <AskGuideToggle compact open={guide} onToggle={toggleGuide} />
+        </div>
         {/* The "/" shortcut, shown where it applies: a keyboard, an empty unfocused box. */}
         {!text && !lowOnQuestions && (
           <kbd

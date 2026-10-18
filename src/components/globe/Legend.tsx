@@ -3,21 +3,19 @@
 import { useSyncExternalStore } from "react";
 import { DEPTH_STEPS } from "@/lib/depth";
 
-const KEY = "ask-the-planet:legend-open";
+// v2: the default changed to folded, so earlier choices start over.
+const KEY = "ask-the-planet:legend-open-v2";
 const CHANGE = "legend-open-change";
 
-/** Room enough (the wide layout, and some height) that the open key sits under the globe rather than over it. */
-const WIDE = "(min-width: 1024px) and (min-height: 700px)";
-
-/** Whether the key is open: the visitor's choice if they made one, else open on big screens, folded on phones, tablets and short windows. */
+/** Whether the key is open: the visitor's choice if they made one, else folded, so the globe has the room. */
 const readOpen = () => {
   try {
     const saved = localStorage.getItem(KEY);
     if (saved !== null) return saved === "1";
   } catch {
-    // storage blocked: fall through to the screen-size default
+    // Storage blocked: fall through to folded.
   }
-  return window.matchMedia(WIDE).matches;
+  return false;
 };
 const subscribe = (onChange: () => void) => {
   window.addEventListener(CHANGE, onChange);
@@ -43,7 +41,7 @@ const Chevron = ({ up }: { up: boolean }) => (
  * the globe's corner; folds down to just its four colors, and remembers.
  */
 export function Legend() {
-  const open = useSyncExternalStore(subscribe, readOpen, () => true);
+  const open = useSyncExternalStore(subscribe, readOpen, () => false);
   const toggle = () => saveOpen(!open);
 
   const sizes = [

@@ -2,6 +2,7 @@ import { Freshness } from "@/components/Freshness";
 import { GlobeView } from "@/components/globe/GlobeView";
 import { Legend } from "@/components/globe/Legend";
 import { AnswerPanel } from "@/components/panel/AnswerPanel";
+import { ANSWER_END_ID, PinnedBar } from "@/components/PinnedBar";
 import { QuestionBar } from "@/components/QuestionBar";
 import { UrlSync } from "@/components/UrlSync";
 
@@ -44,15 +45,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Phones: pinned to the bottom of the screen, so asking is always a thumb away.
-          Wide screens: the end of the answer column, so it never covers the answer ("/" jumps to it).
+      {/* Pinned to the bottom of the screen at every size, so asking is always in view; the answer
+          scrolls under it, and at the end of the page it settles back into place.
           First in the page order all the same, so Tab reaches the question before the answer. */}
-      <div className="sticky bottom-0 z-10 bg-bg/95 px-4 pt-2 pb-4 backdrop-blur-sm [grid-area:bar] md:px-10 lg:static lg:bg-transparent lg:pr-14 lg:pb-8 lg:pl-4 lg:backdrop-blur-none">
+      <PinnedBar className="sticky bottom-0 z-10 bg-bg/95 px-4 pt-2 pb-4 backdrop-blur-sm [grid-area:bar] md:px-10 lg:pr-14 lg:pb-8 lg:pl-4">
         <QuestionBar />
-      </div>
+      </PinnedBar>
 
       <div className="min-w-0 px-4 pt-2 pb-10 [grid-area:panel] md:px-10 lg:pt-6 lg:pr-14 lg:pb-4 lg:pl-4">
         <AnswerPanel />
+        <div id={ANSWER_END_ID} aria-hidden="true" />
       </div>
     </main>
   );

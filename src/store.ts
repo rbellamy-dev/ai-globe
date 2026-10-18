@@ -58,6 +58,11 @@ interface GlobeState {
   asking: boolean;
   /** Why a typed question has no answer (unsupported, failed, or over the limit). */
   notice: string | null;
+  /** The AI's note when it couldn't answer the question as asked but named a place, so its quakes show anyway. */
+  aside: string | null;
+  /** The "What can I ask?" guide by the question box: opened by hand, or by a question the map can't answer. */
+  guideOpen: boolean;
+  setGuideOpen: (open: boolean) => void;
   /** With an unsupported question: a related query the data can answer, offered as a button. */
   suggestion: Query | null;
   /** The last typed question failed (network or server), so it can be retried as is. */
@@ -142,6 +147,8 @@ export const useGlobe = create<GlobeState>((set, get) => {
     source: null,
     asking: false,
     notice: null,
+    aside: null,
+    guideOpen: false,
     suggestion: null,
     failed: false,
     questionsLeft: QUESTIONS_PER_VISIT,
@@ -177,13 +184,19 @@ export const useGlobe = create<GlobeState>((set, get) => {
       }
     },
 
+    setGuideOpen(open) {
+      set({ guideOpen: open });
+    },
+
     ask(query, { question, presetId }) {
       show(query, true, {
+        guideOpen: false,
         question,
         presetId: presetId ?? null,
         edited: false,
         source: presetId ? "preset" : "ai",
         notice: null,
+        aside: null,
         suggestion: null,
         failed: false,
       });
@@ -200,7 +213,7 @@ export const useGlobe = create<GlobeState>((set, get) => {
         return;
       }
       // Show the question straight away; the globe keeps the last answer until the new one lands.
-      set({ question, presetId: null, asking: true, notice: null, suggestion: null, failed: false });
+      set({ question, presetId: null, asking: true, notice: null, aside: null, suggestion: null, failed: false, guideOpen: false });
       countQuestion();
       set({ questionsLeft: questionsLeft() });
       try {
@@ -212,10 +225,18 @@ export const useGlobe = create<GlobeState>((set, get) => {
         // A platform error page isn't JSON; fall through to the general message.
         const data = (await res.json().catch(() => ({}))) as { query?: Query; error?: string };
         if (!res.ok || !data.query) throw new Error(data.error ?? `HTTP ${res.status}`);
-        if (data.query.unsupported) {
-          const { unsupported, ...offer } = data.query;
+        const { unsupported, ...rest } = data.query;
+        if (unsupported && rest.region) {
+          // A place was named: show its earthquakes straight away, with the AI's note on what it couldn't do.
+          set({ asking: false });
+          get().ask({ ...rest, unsupported: null }, { question });
+          set({ aside: unsupported });
+        } else if (unsupported) {
+          const offer = rest;
           set({
             asking: false,
+            // Nothing to show: the guide opens, so the next question has something to start from.
+            guideOpen: true,
             notice: unsupported,
             // Only worth offering if it actually narrows things down.
             suggestion: isUnfiltered({ ...offer, unsupported: null }) ? null : { ...offer, unsupported: null },
@@ -242,7 +263,7 @@ export const useGlobe = create<GlobeState>((set, get) => {
       // With every filter gone, the answer is just the default view again.
       if (isUnfiltered(next)) return get().reset();
       // Taking a region away zooms back out to the world; other filters leave the camera be.
-      show(next, key === "region", { presetId: null, edited: true });
+      show(next, key === "region", { presetId: null, edited: true, aside: null });
     },
 
     reset() {
@@ -250,7 +271,7 @@ export const useGlobe = create<GlobeState>((set, get) => {
     },
 
     restore(answer) {
-      const base = { notice: null, suggestion: null, failed: false };
+      const base = { notice: null, aside: null, suggestion: null, failed: false };
       if (!answer) {
         show(DEFAULT_QUERY, true, { ...base, question: null, presetId: null, edited: false, source: null });
         return;
