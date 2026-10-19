@@ -16,7 +16,7 @@ export function Freshness() {
   if (!generatedAt) return null;
   return (
     // One line at any normal size; with very large text it breaks between the parts, not inside them.
-    <p className="max-w-1/2 shrink-0 text-right text-sm text-muted">
+    <p className="max-w-1/2 shrink-0 text-right text-sm text-muted max-md:max-w-none max-md:text-center">
       Live{" "}
       <span className="whitespace-nowrap">
         ·{" "}

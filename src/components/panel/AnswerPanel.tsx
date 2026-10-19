@@ -166,7 +166,7 @@ export function AnswerPanel() {
             </button>
           )}
           {/* Wider screens have the examples (and the guide) in the question bar already. */}
-          <div className="md:hidden">
+          <div className="md:hidden short:block">
             <Examples label={suggestion ? "Or try" : "Try"} />
           </div>
         </div>
@@ -178,11 +178,11 @@ export function AnswerPanel() {
         <div className={`flex flex-col gap-4 ${typed ? "border-t border-line pt-4" : ""}`}>
           {/* Asked something the data can't answer, about a place: what it couldn't do, then the place's quakes. */}
           {aside && <p className="text-base leading-relaxed text-muted">{aside}</p>}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 max-md:flex-col max-md:text-center">
             <p className="shrink-0 text-6xl leading-none font-semibold tracking-tight text-ink tabular-nums lg:text-[clamp(4.5rem,7vw,7rem)]">
               {head.count.toLocaleString("en-US")}
             </p>
-            <p className="min-w-[min(14rem,100%)] flex-1 text-lg leading-snug text-balance text-ink lg:text-2xl">
+            <p className="min-w-[min(14rem,100%)] flex-1 text-lg max-md:flex-none leading-snug text-balance text-ink lg:text-2xl">
               {head.lead}
               {head.sized && ` ${keepTogether(head.size)}`}
               {head.depth && ` ${head.depth}`}
@@ -275,7 +275,7 @@ export function AnswerPanel() {
 
       {/* Phones: the examples live here, where the first answer is, not in the pinned bar. */}
       {ready && !question && (
-        <div className="md:hidden">
+        <div className="md:hidden short:block">
           <Examples />
         </div>
       )}

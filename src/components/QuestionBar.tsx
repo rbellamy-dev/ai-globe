@@ -74,8 +74,8 @@ export function QuestionBar() {
   return (
     <div ref={root} className="mx-auto flex w-full max-w-3xl flex-col gap-1">
       {guide && <AskGuidePanel onPick={pick} takeFocus={openedByHand} />}
-      {/* Phones pin only the question box (the guide's toggle sits inside it); their examples sit in the answer instead. */}
-      <div className="hidden items-center justify-between gap-x-4 md:flex">
+      {/* Phones (and phones on their side) pin only the question box (the guide's toggle sits inside it); their examples sit in the answer instead. */}
+      <div className="hidden items-center justify-between gap-x-4 md:flex short:hidden">
         <div className="min-w-0">
           <Examples />
         </div>
@@ -105,14 +105,14 @@ export function QuestionBar() {
             {left === 0 ? "No questions left" : `${left} ${left === 1 ? "question" : "questions"} left`}
           </span>
         )}
-        <div className="md:hidden">
+        <div className="md:hidden short:block">
           <AskGuideToggle compact open={guide} onToggle={toggleGuide} />
         </div>
         {/* The "/" shortcut, shown where it applies: a keyboard, an empty unfocused box. */}
         {!text && !lowOnQuestions && (
           <kbd
             aria-hidden="true"
-            className="hidden rounded border border-chip-line px-1.5 font-mono text-xs text-muted peer-focus:invisible md:block"
+            className="hidden rounded border border-chip-line px-1.5 font-mono text-xs text-muted peer-focus:invisible md:block short:hidden"
           >
             /
           </kbd>
